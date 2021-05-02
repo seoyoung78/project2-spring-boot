@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+					 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mycompany.webapp.dao.UsersDao">
+	
+	<!-- 전체 카운트 -->
+	<select id="count" resultType="int">
+		SELECT count(*) 
+		FROM users
+	</select>
+	
+	<!-- 상태 카운트 -->
+	<select id="stateCount" resultType="int">
+		SELECT count(*) 
+		FROM users
+		WHERE delete_state = #{deleteState}
+	</select>
+	
+	<!-- 키워드 카운트 -->
+	<select id="keywordCount" resultType="int">
+		SELECT count(*) 
+		FROM users
+		WHERE user_id LIKE '%'||#{keyword}||'%' 
+	</select>
+	
+	<!-- 상태 + 키워드 카운트 -->
+	<select id="stateKeywordCount" resultType="int">
+		SELECT count(*) 
+		FROM users
+		WHERE delete_state = #{deleteState}
+		AND	user_id LIKE '%'||#{keyword}||'%' 
+	</select>
+	
+	<!-- 회원 수정 -->
+	<update id="updateUser">
+		UPDATE 
+			users
+		SET
+			user_id = #{user.userId},
+			user_name = #{user.userName},
+			user_phone = #{user.userPhone},
+			zip_code = #{user.zipCode},
+			road_address = #{user.roadAddress},
+			detail_address = #{user.detailAddress},
+			user_enable = #{user.userEnabled},
+			user_authority = #{user.userAuthority},
+			user_account = #{user.userAccount},
+			user_bank = #{user.userBank},
+			account_name = #{user.accountName}
+			<if test="userState == 1">
+				 ,delete_state = 1
+				 ,delete_date = sysdate
+				 ,delete_reason = #{user.deleteReason}
+      		</if>
+		WHERE
+			user_id = #{user.userId}
+	</update>
+
+	<!-- 회원 목록 페이지	 -->
+	<select id="selectByPage" resultType="user">
+        SELECT  rnum, 
+        	 	user_id as userId,
+                user_name as userName,
+                user_ssn1 as userSsn1,
+                delete_state as deleteState,
+                user_regdate as userRegdate
+         FROM (
+             SELECT rownum as rnum,  
+        	 	  	user_id,
+                 	user_name,
+                 	user_ssn1,
+                 	delete_state,
+                 	user_regdate
+             FROM (
+                SELECT 
+                 		user_id,
+                 		user_name,
+                 		user_ssn1,
+                 		delete_state,
+                 		user_regdate
+                FROM	users
+                ORDER BY
+                		user_regdate desc,
+                		user_id desc
+             )
+             WHERE rownum &lt;= #{endRowNo}
+           
+         )
+         WHERE rnum &gt;= #{startRowNo}
+     </select>  
+     
+     <!-- 키워드 별 페이지 -->
+     <select id="selectByUserPage" resultType="user">
+        SELECT  rnum, 
+        	 	user_id as userId,
+                user_name as userName,
+                user_ssn1 as userSsn1,
+                delete_state as deleteState,
+                user_regdate as userRegdate
+         FROM (
+             SELECT rownum as rnum,  
+        	 	  	user_id,
+                 	user_name,
+                 	user_ssn1,
+                 	delete_state,
+                 	user_regdate
+             FROM (
+                SELECT 
+                 		user_id,
+                 		user_name,
+                 		user_ssn1,
+                 		delete_state,
+                 		user_regdate
+                FROM	users
+                WHERE
+                		user_id LIKE '%'||#{keyword}||'%' 
+                ORDER BY
+                		user_regdate desc,
+                		user_id desc
+             )
+             WHERE rownum &lt;= #{pager.endRowNo}
+           
+         )
+         WHERE rnum &gt;= #{pager.startRowNo}
+     </select>  
+     
+     <!-- 상태 별 페이지 -->
+     <select id="selectByStatePage" resultType="user">
+        SELECT  rnum, 
+        	 	user_id as userId,
+                user_name as userName,
+                user_ssn1 as userSsn1,
+                delete_state as deleteState,
+                user_regdate as userRegdate
+         FROM (
+             SELECT rownum as rnum,  
+        	 	  	user_id,
+                 	user_name,
+                 	user_ssn1,
+                 	delete_state,
+                 	user_regdate
+             FROM (
+                SELECT 
+                 		user_id,
+                 		user_name,
+                 		user_ssn1,
+                 		delete_state,
+                 		user_regdate
+                FROM	users
+                WHERE
+                		delete_state = #{deleteState}
+                ORDER BY
+                		user_regdate desc,
+                		user_id desc
+             )
+             WHERE rownum &lt;= #{pager.endRowNo}
+         )
+         WHERE rnum &gt;= #{pager.startRowNo}
+     </select>  
+     
+     <!-- 상태 + 키워드 별 페이지 -->
+      <select id="selectByStateKeywordPage" resultType="user">
+        SELECT  rnum, 
+        	 	user_id as userId,
+                user_name as userName,
+                user_ssn1 as userSsn1,
+                delete_state as deleteState,
+                user_regdate as userRegdate
+         FROM (
+             SELECT rownum as rnum,  
+        	 	  	user_id,
+                 	user_name,
+                 	user_ssn1,
+                 	delete_state,
+                 	user_regdate
+             FROM (
+                SELECT 
+                 		user_id,
+                 		user_name,
+                 		user_ssn1,
+                 		delete_state,
+                 		user_regdate
+                FROM	users
+                WHERE
+                		delete_state = #{deleteState}
+                AND
+                		user_id LIKE '%'||#{keyword}||'%' 
+                ORDER BY
+                		user_regdate desc,
+                		user_id desc
+             )
+             WHERE rownum &lt;= #{pager.endRowNo}
+           
+         )
+         WHERE rnum &gt;= #{pager.startRowNo}
+     </select>  
+     
+	<!-- 회원 상세 정보 -->
+	<select id="selectByUserid" parameterType="string" resultType="user">
+		SELECT
+			user_id as userId,
+			user_name as userName,
+			user_password as userPassword,
+			user_phone as userPhone, 
+			zip_code as zipCode,
+			road_address as roadAddress,
+			detail_address as detailAddress,
+			user_ssn1 as userSsn1, 
+			user_ssn2 as userSsn2,
+			user_regdate as userRegdate,
+			user_account as userAccount,
+			user_bank as userBank,
+			account_name as accountName,
+			user_authority as userAuthority, 
+			user_enable as userEnable,
+			delete_state as deleteState, 
+			delete_date as deleteDate,
+			delete_reason as deleteReason
+		FROM 
+			users
+		WHERE 
+			user_id = #{userId}
+	</select>
+
+</mapper>

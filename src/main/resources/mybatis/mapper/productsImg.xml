@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.mycompany.webapp.dao.ProductsImgDao">
+
+	<select id="selectByPnoImg" parameterType="int" resultType="productImg">
+		 SELECT 
+			img_no as imgNo,
+			product_no as productNo,
+            img_state as imgState,
+			img_oname as imgOname,
+			img_sname as imgSname,
+			img_type as imgType
+		FROM
+			 products_img
+		WHERE
+			product_no = #{pid}
+		ORDER BY 
+			 img_state asc
+	</select>
+	
+	<insert id="insert" parameterType="product">
+		INSERT INTO products_img
+			(img_no,
+			product_no,
+            img_state,
+			img_oname,
+			img_sname,
+			img_type)
+		VALUES(
+            seq_products_img_img_no.nextval,
+			seq_products_product_no.currval,
+            #{imgState},
+			#{imgOname},
+			#{imgSname},
+			#{imgType}
+		)
+	</insert>
+	
+	<update id="update" parameterType="productImg">
+		UPDATE 
+			products_img
+		SET
+			img_state = #{imgState},			
+			img_oname = #{imgOname},
+			img_sname = #{imgSname},
+			img_type = #{imgType}
+		WHERE
+			product_no = #{productNo}
+		AND
+			img_state = #{imgState}
+	</update>
+	
+	
+</mapper>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- <mapper namespace="boards"> -->
+<mapper namespace="com.mycompany.webapp.dao.QnaDao">
+
+	<select id="selectStatevalByPage"  resultType="qna">
+		select rnum,qnaNo,userId,email,qnaTitle,qnaContent,qnaRegdate,answerState,answerDate,answerContent
+		from (
+			select rownum as rnum,qnaNo,userId,email,qnaTitle,qnaContent,qnaRegdate,answerState,answerDate,answerContent
+			from (
+				select 	
+					qna_no as qnaNo,
+					user_id as userId,
+					email,
+					qna_title as qnaTitle,
+					qna_content as qnaContent,
+					qna_regdate as qnaRegdate,
+					answer_state as answerState,
+					answer_date as answerDate,
+					answer_content as answerContent
+					from qna
+					<if test='stateval != 2'>
+					where answer_state = #{stateval}
+					</if>
+					ORDER BY 
+        				qna_regdate desc,
+        				qna_no asc
+			)
+			where rownum &lt;= #{pager.endRowNo}
+		)
+		where rnum &gt;= #{pager.startRowNo}
+	</select>
+	
+	<select id="statevalCount" resultType="int">
+   		select count(*) from qna 
+   		<if test='stateval != 2'>
+			where answer_State = #{stateval}
+		</if>
+	</select>
+	
+	<!-- 	<select id="selectByPage"  resultType="qna">
+		select rnum,qnaNo,userId,email,qnaTitle,qnaContent,qnaRegdate,answerState,answerDate,answerContent
+		from (
+			select rownum as rnum,qnaNo,userId,email,qnaTitle,qnaContent,qnaRegdate,answerState,answerDate,answerContent
+			from (
+				select 	
+					qna_no as qnaNo,
+					user_id as userId,
+					email,
+					qna_title as qnaTitle,
+					qna_content as qnaContent,
+					qna_regdate as qnaRegdate,
+					answer_state as answerState,
+					answer_date as answerDate,
+					answer_content as answerContent
+					from qna
+					<if test='keyword == ""'>
+					</if>
+					<if test='keyword != ""'>
+						WHERE 
+				 	  	 qna_Content LIKE '%'||#{keyword}||'%' or qna_Title LIKE '%'||#{keyword}||'%' 
+				 	  	 or answer_State LIKE '%'||#{keyword}||'%' or user_id LIKE '%'||#{keyword}||'%'
+					</if>
+			)
+			where rownum &lt;= #{pager.endRowNo}
+		)
+		where rnum &gt;= #{pager.startRowNo}
+	</select>
+	
+	<select id="count" resultType="int">
+   		select count(*) from qna 
+   		<if test='keyword == ""'>
+		</if>
+		<if test='keyword != ""'>
+			WHERE 
+	 	  	 qna_Content LIKE '%'||#{keyword}||'%' or qna_Title LIKE '%'||#{keyword}||'%'  or answer_State LIKE '%'||#{keyword}||'%' 
+	 	  	  or user_id LIKE '%'||#{keyword}||'%'
+		</if>
+	</select> -->
+	
+
+	<select id="selectByQnaNo" resultType="qna">
+      select 
+			q.user_id as userId,
+			q.email,
+			q.qna_title as qnaTitle,
+			q.qna_content as qnaContent,
+			q.qna_regdate as qnaRegdate,
+			q.answer_state as answerState,
+			q.answer_date as answerDate,
+			q.answer_content as answerContent,
+			q.qna_no as qnaNo,
+			u.user_name as userName
+	from qna q, users u
+    where 
+    q.user_id = u.user_id and
+    qna_no=#{qnaNo}
+   </select>
+		
+	<insert id="insert" parameterType="qna">
+      insert into qna (qna_no, user_id, email, qna_title, qna_content, qna_regdate, answer_state, answer_date, answer_content)
+      values (seq_qna_qnaNo.nextval, #{userId}, #{email}, #{qnaTitle}, #{qnaContent}, #{qnaRegdate}, 1, sysdate, #{answerContent})
+	</insert>
+	
+	<delete id="deleteByQnaNo" parameterType="int">
+      delete from qna where qna_no=#{qnaNo}
+	</delete>
+	 
+	<update id="update" parameterType="qna">
+      update 
+      		qna 
+      set 
+      		answer_content = #{answerContent}, answer_date = sysdate, answer_state = 1
+      where 
+      		qna_no=#{qnaNo}
+   </update>
+   
+   <select id="totalcount" resultType="int">
+		SELECT count(*) 
+		FROM qna
+	</select>
+	
+	<select id="stateCount" resultType="int">
+		SELECT count(*) 
+		FROM qna
+		WHERE answer_state = #{answerState}
+	</select>
+
+</mapper>

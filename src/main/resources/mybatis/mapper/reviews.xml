@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+					 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mycompany.webapp.dao.ReviewsDao">
+
+	<select id="count" parameterType="String" resultType="int">
+		select count(*) 
+		from reviews r, products p, orders o
+    where r.product_no = p.product_no
+	     and r.order_no = o.order_no
+		<if test='keyword != ""'>
+			and (r.review_content LIKE '%'||#{keyword}||'%' or p.product_name LIKE '%'||#{keyword}||'%')
+		</if>
+	</select>
+	
+	<select id="selectByPage" resultType="review">
+		select rnum, reviewNo, orderNo, productNo, productName, userId, reviewContent, reviewRegdate
+    from (
+        select rownum as rnum, 
+        			 reviewNo, orderNo, productNo, productName, userId, reviewContent, reviewRegdate
+        from (
+            select r.review_no as reviewNo, 
+								   r.order_no as orderNo,
+								   r.product_no as productNo, 
+								   p.product_name as productName, 
+								   r.user_id as userId, 
+								   r.review_content as reviewContent, 
+								   r.review_regdate as reviewRegdate
+            from reviews r, products p, orders o
+            where r.product_no = p.product_no
+	            and r.order_no = o.order_no
+            <if test='keyword != ""'>
+							and (r.review_content LIKE '%'||#{keyword}||'%' or p.product_name LIKE '%'||#{keyword}||'%') 
+						</if>
+            order by review_regdate desc
+        )
+        where rownum &lt;= #{pager.endRowNo}
+    )
+    where rnum &gt;= #{pager.startRowNo}
+	</select>
+	
+	<select id="selectByRno" parameterType="int" resultType="review">
+		select r.review_no as reviewNo, 
+					 r.order_no as orderNo,
+					 r.product_no as productNo, 
+					 p.product_name as productName, 
+					 r.user_id as userId, 
+					 r.review_content as reviewContent, 
+					 r.review_regdate as reviewRegdate				 
+		from reviews r, products p
+		where r.review_no = #{ReviewNo}
+			and r.product_no = p.product_no	
+		order by r.review_regdate desc			 
+	</select>
+	
+	<update id="update" parameterType="review">
+   		update reviews set review_content = #{reviewContent} where review_no = #{reviewNo}
+   </update>
+	
+	<delete id="deleteReview">
+		delete from reviews
+		where review_no = #{reviewNo}
+	</delete>
+	
+</mapper>

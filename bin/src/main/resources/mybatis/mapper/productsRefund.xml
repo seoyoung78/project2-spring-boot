@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+					 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+					 
+<mapper namespace="com.mycompany.webapp.dao.ProductsRefundDao">
+	
+	<select id="selectByPage" resultType="productsRefund">
+      select rnum, orderNo, refundState, refundDate, refundReason, userId 
+      from (
+          select rownum as rnum, orderNo, refundState, refundDate, refundReason, userId
+          from (
+             select r.order_no as orderNo, r.refund_state as refundState, r.refund_date as refundDate, r.refund_reason as refundReason, o.user_id as userID 
+             from products_refund r, orders o
+             where r.order_no = o.order_no
+             		<if test='stateval != 2 and reason != "전체"'>
+						   			 and r.refund_state = #{stateval}
+						   			 and r.refund_reason = #{reason}
+						  	</if>
+						  	<if test='stateval == 2 and reason != "전체"'>
+					   				and refund_reason = #{reason}
+					   		</if>
+					   		<if test='stateval != 2 and reason == "전체"'>
+					   				and refund_state = #{stateval}
+					   		</if>
+             order by r.order_no desc
+          )
+          where rownum &lt;= #{pager.endRowNo}
+      ) 
+      where rnum &gt;= #{pager.startRowNo}
+   </select>
+   
+   <select id="count" resultType="int">
+   		select count(*)
+   		from products_refund
+   		<if test='stateval != 2 and reason != "전체"'>
+   			where refund_state = #{stateval}
+   				and refund_reason = #{reason}
+   		</if>
+   		<if test='stateval == 2 and reason != "전체"'>
+   			where refund_reason = #{reason}
+   		</if>
+   		<if test='stateval != 2 and reason == "전체"'>
+   			where refund_state = #{stateval}
+   		</if>
+   </select>
+   
+   <select id="selectByOno" parameterType="int" resultType="productsRefund">
+   		select r.order_no as orderNo, r.refund_state as refundState, r.refund_date as refundDate, r.refund_reason as refundReason, o.user_id as userId 
+      from products_refund r, orders o
+      where r.order_no = o.order_no
+      	and r.order_no = #{orderNo}
+   </select>
+   
+   <update id="update" parameterType="productsRefund">
+   		update products_refund set refund_state=#{refundState} where order_no = #{orderNo}
+   </update>
+   
+</mapper>
